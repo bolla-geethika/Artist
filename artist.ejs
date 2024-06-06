@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Details</title>
+    <style>
+        /* Reset default margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 600px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        /* Heading styles */
+        h1, h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Form styles */
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Artist details styles */
+        .artist-details {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .artist-details p {
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Search for an Artist</h1>
+        <form action="/artist/details" method="get">
+            <input type="text" name="artistName" placeholder="Enter artist name" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <% if (artist) { %>
+            <div class="artist-details">
+                <h2>Artist Details</h2>
+                <p><strong>Name:</strong> <%= artist.name %></p>
+                <p><strong>Genre:</strong> <%= artist.genre %></p>
+                <p><strong>Bio:</strong> <%= artist.bio %></p>
+            </div>
+        <% } else if (error) { %>
+            <p class="error-message"><%= error %></p>
+        <% } %>
+    </div>
+</body>
+</html>
