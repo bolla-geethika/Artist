@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs').promises;
+const admin = require('firebase-admin');
 
 const app = express();
 
@@ -16,13 +17,25 @@ app.set('view engine', 'ejs');
 // Async function to read the config
 async function getConfig() {
     try {
-        const data = await fs.readFile('key.json', 'utf-8');
+        const data = await fs.readFile('./key.json', 'utf-8'); // Adjust path if necessary
         return JSON.parse(data);
     } catch (error) {
-        console.error('Error reading configuration file:', error);
+        if (error.code === 'ENOENT') {
+            console.error('Configuration file "key.json" not found.');
+        } else {
+            console.error('Error reading configuration file:', error);
+        }
         process.exit(1); // Exit if the configuration cannot be read
     }
 }
+
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./key.json'); // Update with your service account key path
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://your-project-id.firebaseio.com' // Replace with your database URL
+});
+const db = admin.firestore();
 
 // Last.fm API configuration
 const LAST_FM_API_KEY = 'cdc20bee3f132be698df67f35be5b221'; // Replace with your Last.fm API key
@@ -65,22 +78,38 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // Perform login logic here
-    // Assuming login is successful, redirect to the artist page
-    res.redirect('/artist');
+    try {
+        const userSnapshot = await db.collection('users').where('username', '==', username).get();
+        if (userSnapshot.empty) {
+            return res.render('login', { error: 'Invalid username or password' });
+        }
+        const user = userSnapshot.docs[0].data();
+        if (user.password === password) {
+            res.redirect('/artist');
+        } else {
+            res.render('login', { error: 'Invalid username or password' });
+        }
+    } catch (error) {
+        console.error('Error logging in:', error);
+        res.render('login', { error: 'Something went wrong. Please try again.' });
+    }
 });
 
 app.get('/signup', (req, res) => {
     res.render('signup');
 });
 
-app.post('/signup', (req, res) => {
+app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
-    // Perform signup logic here
-    // Assuming signup is successful, redirect to the login page
-    res.redirect('/login');
+    try {
+        await db.collection('users').add({ username, password });
+        res.redirect('/login');
+    } catch (error) {
+        console.error('Error signing up:', error);
+        res.render('signup', { error: 'Something went wrong. Please try again.' });
+    }
 });
 
 app.get('/artist', (req, res) => {
